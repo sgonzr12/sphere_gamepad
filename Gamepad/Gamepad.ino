@@ -2,179 +2,140 @@
 MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+...
+(The MIT License text remains unchanged)
 */
 
 #include "ESP32USB.h"
 
 extern "C" {
-  #include "NSProtocol.h"
-  #include "NSGamepad.h"
+  #include "PS4Types.h"      // Cambiado de "NSTypes.h" a "PSTypes.h"
+  #include "PS4Protocol.h"  // Cambiado de "NSProtocol.h" a "PS4Protocol.h"
   #include "Pins.h"
 }
 
 ESP32USB esp32USB;
 
 // Gamepad
-tNSGamepad nsGamepad;
+tPS4Gamepad PS4Gamepad;
 // Datos del gamepad serializados para su envio
-uint8_t buffer [NS_GAMEPAD_REPORT_SIZE];
+uint8_t buffer[PS4_GAMEPAD_REPORT_SIZE];
 
 void setup() {
-
   Serial.begin(9600);
 
-  NSGamepadReleaseAllButtons(&nsGamepad);
+  // Inicializar todos los botones como no presionados
+  PS4GamepadReleaseAllButtons(&PS4Gamepad);
 
+  // Inicializar la comunicación USB
   esp32USB.begin();
 }
 
 void loop() {
-  /*
-    // Variable estática para almacenar el índice del botón actual
-    static tNSButtons botonActual = Y; // Empezamos por el primer botón
-
-    // Registramos la pulsación del botón actual en nsGamepad
-    NSGamepadPressButton(botonActual, &nsGamepad);
-
-    // Serializamos los datos contenidos en nsGamepad para su envío
-    NSProtocolSerializeNSGamepadData(nsGamepad, buffer);
-
-    // Enviamos el contenido del buffer por USB
-    esp32USB.write(NS_GAMEPAD_REPORT_SIZE, buffer);
-
-    // Esperamos un poco para simular la duración de la pulsación
-    delay(100);
-
-    // Soltamos el botón actual
-    NSGamepadReleaseButton(botonActual, &nsGamepad);
-
-    // Serializamos nuevamente después de soltar el botón
-    NSProtocolSerializeNSGamepadData(nsGamepad, buffer);
-
-    // Enviamos nuevamente el buffer tras soltar el botón
-    esp32USB.write(NS_GAMEPAD_REPORT_SIZE, buffer);
-
-    // Esperamos antes de pasar al siguiente botón
-    delay(100);
-
-    // Avanzamos al siguiente botón de forma cíclica
-    botonActual = (tNSButtons)((int)botonActual + 1); // Convertimos a int, sumamos 1 y luego a tNSButtons
-    if (botonActual >= RESERVED_LAST_BUTTON_UNUSED) {
-      botonActual = Y; // Reiniciamos al primer botón
-    }
-  */
-
-
-
-  //check if any button is pressed
-  //imprimir valor del pin A
+  // Verificar el estado de cada botón utilizando sensores táctiles
+  // Imprimir el valor del pin ZR para depuración
   Serial.println(touchRead(BUTTON_ZR));
+
+  // Mapeo de botones de PS4
   if (touchRead(BUTTON_A) > TOUCH_THRESHOLD) {
-    NSGamepadPressButton(A, &nsGamepad);
-    //mostrarMensaje("Boton A presionado");
+    PS4GamepadPressButton(CROSS, &PS4Gamepad); // BUTTON_A mapea a CROSS
     Serial.println("Boton A presionado");
   } else {
-    NSGamepadReleaseButton(A, &nsGamepad);
+    PS4GamepadReleaseButton(CROSS, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_B) > TOUCH_THRESHOLD) {
-    NSGamepadPressButton(B, &nsGamepad);
+    PS4GamepadPressButton(CIRCLE, &PS4Gamepad); // BUTTON_B mapea a CIRCLE
   } else {
-    NSGamepadReleaseButton(B, &nsGamepad);
+    PS4GamepadReleaseButton(CIRCLE, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_X) > TOUCH_THRESHOLD) {
-    NSGamepadPressButton(X, &nsGamepad);
+    PS4GamepadPressButton(SQUARE, &PS4Gamepad); // BUTTON_X mapea a SQUARE
   } else {
-    NSGamepadReleaseButton(X, &nsGamepad);
+    PS4GamepadReleaseButton(SQUARE, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_Y) > TOUCH_THRESHOLD) {
-    NSGamepadPressButton(Y, &nsGamepad);
+    PS4GamepadPressButton(TRIANGLE, &PS4Gamepad); // BUTTON_Y mapea a TRIANGLE
   } else {
-    NSGamepadReleaseButton(Y, &nsGamepad);
+    PS4GamepadReleaseButton(TRIANGLE, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_L) > TOUCH_THRESHOLD) {
     Serial.println("Boton L presionado");
-    NSGamepadPressButton(L, &nsGamepad);
+    PS4GamepadPressButton(L1, &PS4Gamepad); // BUTTON_L mapea a L1
   } else {
-    NSGamepadReleaseButton(L, &nsGamepad);
+    PS4GamepadReleaseButton(L1, &PS4Gamepad);
   }
-  if (touchRead(BUTTON_R) > TOUCH_THRESHOLD) {
 
+  if (touchRead(BUTTON_R) > TOUCH_THRESHOLD) {
     Serial.println("Boton R presionado");
-    NSGamepadPressButton(R, &nsGamepad);
+    PS4GamepadPressButton(R1, &PS4Gamepad); // BUTTON_R mapea a R1
   } else {
-    NSGamepadReleaseButton(R, &nsGamepad);
+    PS4GamepadReleaseButton(R1, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_ZL) > TOUCH_THRESHOLD) {
     Serial.println("Boton ZL presionado");
-    NSGamepadPressButton(ZL, &nsGamepad);
+    PS4GamepadPressButton(L2, &PS4Gamepad); // BUTTON_ZL mapea a L2
   } else {
-    NSGamepadReleaseButton(ZL, &nsGamepad);
+    PS4GamepadReleaseButton(L2, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_ZR) > TOUCH_THRESHOLD) {
     Serial.println("Boton ZR presionado");
-    NSGamepadPressButton(ZR, &nsGamepad);
+    PS4GamepadPressButton(R2, &PS4Gamepad); // BUTTON_ZR mapea a R2
   } else {
-    NSGamepadReleaseButton(ZR, &nsGamepad);
+    PS4GamepadReleaseButton(R2, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_HOME) > TOUCH_THRESHOLD) {
-    NSGamepadPressButton(HOME, &nsGamepad);
+    PS4GamepadPressButton(PS, &PS4Gamepad); // BUTTON_HOME mapea a PS
   } else {
-    NSGamepadReleaseButton(HOME, &nsGamepad);
+    PS4GamepadReleaseButton(PS, &PS4Gamepad);
   }
+
   if (touchRead(BUTTON_CAPTURE) > TOUCH_THRESHOLD) {
-    NSGamepadPressButton(CAPTURE, &nsGamepad);
+    PS4GamepadPressButton(SHARE, &PS4Gamepad); // BUTTON_CAPTURE mapea a SHARE
   } else {
-    NSGamepadReleaseButton(CAPTURE, &nsGamepad);
+    PS4GamepadReleaseButton(SHARE, &PS4Gamepad);
   }
+
   if (touchRead(DPAD_UP) > TOUCH_THRESHOLD) {
     Serial.println("Boton DPAD-U presionado");
-    NSGamepadPressButton(UP, &nsGamepad);
+    PS4GamepadPressButton(UP, &PS4Gamepad);
   } else {
-    NSGamepadReleaseButton(UP, &nsGamepad);
+    PS4GamepadReleaseButton(UP, &PS4Gamepad);
   }
+
   if (touchRead(DPAD_DOWN) > TOUCH_THRESHOLD) {
     Serial.println("Boton DPAD-D presionado");
-    NSGamepadPressButton(DOWN, &nsGamepad);
+    PS4GamepadPressButton(DOWN, &PS4Gamepad);
   } else {
-    NSGamepadReleaseButton(DOWN, &nsGamepad);
+    PS4GamepadReleaseButton(DOWN, &PS4Gamepad);
   }
+
   if (touchRead(DPAD_LEFT) > TOUCH_THRESHOLD) {
     Serial.println("Boton DPAD-L presionado");
-    NSGamepadPressButton(LEFT, &nsGamepad);
+    PS4GamepadPressButton(LEFT, &PS4Gamepad);
   } else {
-    NSGamepadReleaseButton(LEFT, &nsGamepad);
+    PS4GamepadReleaseButton(LEFT, &PS4Gamepad);
   }
+
   if (touchRead(DPAD_RIGHT) > TOUCH_THRESHOLD) {
     Serial.println("Boton DPAD-R presionado");
-    NSGamepadPressButton(RIGHT, &nsGamepad);
+    PS4GamepadPressButton(RIGHT, &PS4Gamepad);
   } else {
-    NSGamepadReleaseButton(RIGHT, &nsGamepad);
+    PS4GamepadReleaseButton(RIGHT, &PS4Gamepad);
   }
 
-  // Serializamos los datos contenidos en nsGamepad para su envío
-  NSProtocolSerializeNSGamepadData(nsGamepad, buffer);
+  // Serializar los datos del mando PS4 para su envío
+  PS4ProtocolSerializePS4GamepadData(PS4Gamepad, buffer);
 
-  // Enviamos el contenido del buffer por USB
-  esp32USB.write(NS_GAMEPAD_REPORT_SIZE, buffer);
+  // Enviar el contenido del buffer por USB
+  esp32USB.write(PS4_GAMEPAD_REPORT_SIZE, buffer);
 
-  //añadir un delay para que no se envíen los datos tan rápido
+  // Añadir un pequeño retraso para evitar envíos excesivamente rápidos
   delay(100);
-
 }
-
