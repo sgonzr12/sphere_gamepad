@@ -1,43 +1,10 @@
 #include "PS4Protocol.h"
 
-// Enumeración de botones para el mando de PS4
-typedef enum {
-    CROSS = 0,
-    CIRCLE,
-    SQUARE,
-    TRIANGLE,
-    L1,
-    R1,
-    L2,
-    R2,
-    SHARE,
-    OPTIONS,
-    L3,
-    R3,
-    PS,
-    TOUCHPAD
-} tPS4Buttons;
-
-// Estructura del mando de PS4
-typedef struct {
-    bool buttonsPressed[14]; // Array de botones según la enumeración tPS4Buttons
-    // Agrega otros campos si es necesario, como los valores de los joysticks
-} tPS4Gamepad;
-
-// Estructura del reporte de datos del mando de PS4
-typedef struct {
-    uint8_t actionButtons;
-    uint8_t menuButtons;
-    uint8_t dPad;
-    uint8_t leftXAxis;
-    uint8_t leftYAxis;
-    uint8_t rightXAxis;
-    uint8_t rightYAxis;
-    uint8_t filler;
-} tPS4GamepadReportData;
-
-// Función para convertir los botones del D-Pad a un byte
+// Función que devuelve un byte (8 bits) indicando el estado del D-PAD a partir
+// del estado de pulsación de cada uno de sus botones.
+// La dirección del D-PAD se ajusta a los requisitos del mando de PS4.
 void PS4ProtocolDPadButtonsToByte(int up, int down, int left, int right, uint8_t* byte) {
+    // Se verifica cada combinación válida y se asigna el valor correspondiente a *byte.
     if (up && !down && !left && !right) {
         *byte = PS4GAMEPAD_DPAD_UP;
     } else if (up && !down && !left && right) {
@@ -55,62 +22,53 @@ void PS4ProtocolDPadButtonsToByte(int up, int down, int left, int right, uint8_t
     } else if (up && !down && left && !right) {
         *byte = PS4GAMEPAD_DPAD_UP_LEFT;
     } else {
+        // Si la combinación no es válida, se centra el D-Pad.
         *byte = PS4GAMEPAD_DPAD_CENTERED;
     }
 }
 
-// Función para establecer los botones del reporte de PS4
-void PS4ProtocolReportDataSetButtons(tPS4Gamepad PS4Gamepad, tPS4GamepadReportData* PS4GamepadReportData) {
-    PS4GamepadReportData->actionButtons = 0x00;
-    for (int i = CROSS; i <= R2; i++) {
-        PS4GamepadReportData->actionButtons |= (uint8_t)(PS4Gamepad.buttonsPressed[i] << i);
+// Función que rellena los campos actionButtons y menuButtons de psGamepadReportData.
+// El primer byte representa el estado de los botones de acción del mando PS4.
+void PS4ProtocolReportDataSetButtons(tPSGamepad psGamepad, tPSGamepadReportData* psGamepadReportData) {
+    // Inicializamos actionButtons a 0
+    psGamepadReportData->actionButtons = 0x00;
+
+    // Asignamos los botones de acción (por ejemplo, X, O, Cuadrado, Triángulo)
+    for (int i = X; i <= OPTIONS; i++) {
+        psGamepadReportData->actionButtons |= (uint8_t)(psGamepad.buttonsPressed[i] << i);
     }
 
-    PS4GamepadReportData->menuButtons = 0x00;
-    for (int i = SHARE; i <= TOUCHPAD; i++) {
-        PS4GamepadReportData->menuButtons |= (uint8_t)(PS4Gamepad.buttonsPressed[i] << (i - SHARE));
+    // Inicializamos menuButtons a 0
+    psGamepadReportData->menuButtons = 0x00;
+
+    // Asignamos los botones de menú (por ejemplo, SHARE, OPTIONS)
+    // (ajusta según los botones específicos del PS4)
+    for (int i = SHARE; i <= OPTIONS; i++) {
+        psGamepadReportData->menuButtons |= (uint8_t)(psGamepad.buttonsPressed[i] << (i - SHARE));
     }
 }
 
-// Función para establecer valores por defecto del reporte de PS4
-void PS4ProtocolReportDataSetDefaultValues(tPS4GamepadReportData* PS4GamepadReportData) {
-    PS4GamepadReportData->actionButtons  = 0x00;
-    PS4GamepadReportData->menuButtons    = 0x00;
-    PS4GamepadReportData->dPad           = PS4GAMEPAD_DPAD_CENTERED;
-    PS4GamepadReportData->leftXAxis      = 0x80;
-    PS4GamepadReportData->leftYAxis      = 0x80;
-    PS4GamepadReportData->rightXAxis     = 0x80;
-    PS4GamepadReportData->rightYAxis     = 0x80;
-    PS4GamepadReportData->filler         = 0x00;
+// Valores por defecto del report que se envía al PS4
+void PS4ProtocolReportDataSetDefaultValues(tPSGamepadReportData* psGamepadReportData) {
+    psGamepadReportData->actionButtons = 0x00;
+    psGamepadReportData->menuButtons = 0x00;
+    psGamepadReportData->dPad = PS4GAMEPAD_DPAD_CENTERED; // Valor centrado
+    psGamepadReportData->filler = 0x00; // Relleno
 }
 
-// Función para serializar los datos del mando de PS4
-#define PS4_GAMEPAD_REPORT_SIZE 8
+// Serializa los datos del mando PS4 en un buffer.
+void PS4ProtocolSerializePSGamepadData(tPSGamepad psGamepad, uint8_t buffer[PS4_GAMEPAD_REPORT_SIZE]) {
+    tPSGamepadReportData psGamepadReportData;
 
-void PS4ProtocolSerializePS4GamepadData(tPS4Gamepad PS4Gamepad, uint8_t buffer[PS4_GAMEPAD_REPORT_SIZE]) {
-    tPS4GamepadReportData PS4GamepadReportData;
+    // Cargamos los valores por defecto del report
+    PS4ProtocolReportDataSetDefaultValues(&psGamepadReportData);
 
-    // Establecer valores por defecto
-    PS4ProtocolReportDataSetDefaultValues(&PS4GamepadReportData);
+    // Rellenamos los botones de acción y de menú
+    PS4ProtocolReportDataSetButtons(psGamepad, &psGamepadReportData);
 
-    // Establecer botones
-    PS4ProtocolReportDataSetButtons(PS4Gamepad, &PS4GamepadReportData);
-
-    // Aquí puedes agregar la lógica para el D-Pad y los joysticks si es necesario
-    // Por ejemplo:
-    // PS4ProtocolDPadButtonsToByte(up, down, left, right, &PS4GamepadReportData.dPad);
-    // PS4GamepadReportData.leftXAxis = ...;
-    // PS4GamepadReportData.leftYAxis = ...;
-    // PS4GamepadReportData.rightXAxis = ...;
-    // PS4GamepadReportData.rightYAxis = ...;
-
-    // Serializar los datos en el buffer
-    buffer[0] = PS4GamepadReportData.actionButtons;
-    buffer[1] = PS4GamepadReportData.menuButtons;
-    buffer[2] = PS4GamepadReportData.dPad;
-    buffer[3] = PS4GamepadReportData.leftXAxis;
-    buffer[4] = PS4GamepadReportData.leftYAxis;
-    buffer[5] = PS4GamepadReportData.rightXAxis;
-    buffer[6] = PS4GamepadReportData.rightYAxis;
-    buffer[7] = PS4GamepadReportData.filler;
+    // Serializamos los campos manualmente en el buffer
+    buffer[0] = psGamepadReportData.actionButtons; // Botones de acción
+    buffer[1] = psGamepadReportData.menuButtons;   // Botones de menú
+    buffer[2] = psGamepadReportData.dPad;          // D-Pad
+    buffer[3] = psGamepadReportData.filler;        // Relleno
 }
