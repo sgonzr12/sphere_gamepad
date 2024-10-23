@@ -4,65 +4,80 @@
 #include "stdint.h"
 #include "stddef.h"
 
-// ** Tipos de datos impuestos por el protocolo de la PS4 **
+// ========================================================
+// Definiciones de Constantes para el D-Pad de PS4
+// ========================================================
 
-// Dpad directions
-#define PS4GAMEPAD_DPAD_UP  0
-#define PS4GAMEPAD_DPAD_UP_RIGHT 1
-#define PS4GAMEPAD_DPAD_RIGHT 2
-#define PS4GAMEPAD_DPAD_DOWN_RIGHT 3
-#define PS4GAMEPAD_DPAD_DOWN 4
-#define PS4GAMEPAD_DPAD_DOWN_LEFT 5
-#define PS4GAMEPAD_DPAD_LEFT 6
-#define PS4GAMEPAD_DPAD_UP_LEFT 7
-#define PS4GAMEPAD_DPAD_CENTERED 0xF
+#define PS4GAMEPAD_DPAD_UP          0
+#define PS4GAMEPAD_DPAD_UP_RIGHT    1
+#define PS4GAMEPAD_DPAD_RIGHT       2
+#define PS4GAMEPAD_DPAD_DOWN_RIGHT  3
+#define PS4GAMEPAD_DPAD_DOWN        4
+#define PS4GAMEPAD_DPAD_DOWN_LEFT   5
+#define PS4GAMEPAD_DPAD_LEFT        6
+#define PS4GAMEPAD_DPAD_UP_LEFT     7
+#define PS4GAMEPAD_DPAD_CENTERED    0x08  // El estado neutro del Hat Switch
 
-// ** Tipos de datos impuestos por el protocolo de comunicacion USB OTG de la PS4 **
+// ========================================================
+// Tamaño del Reporte para PS4
+// ========================================================
 
-// Tamaño del mensaje del protocolo para gamepads de la PS4 (en bytes)
-#define PS4_GAMEPAD_REPORT_SIZE 8
+#define PS4_GAMEPAD_REPORT_SIZE 13 // Tamaño del reporte (ajustado según el descriptor HID)
 
-// Report descriptor.
-// Datos binarios que especifican tipo de dispositivo y detalles de los informes (reports)
-// que se enviaran por USB.
-// Es imprescindible especificar este dato para que el dispositivo
-// se identifique y funcione correctamente (quien utilice esta clase deberá hacerlo).
-// HID report descriptor using TinyUSB's template
-// Single Report (no ID) descriptor
-static uint8_t PSReportDescriptor[] = {
-  // Gamepad for PS4
-  // 14 buttons, 1 8-way dpad
-  0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
-  0x09, 0x05,        // Usage (Game Pad)
-  0xA1, 0x01,        // Collection (Application)
-  0x15, 0x00,        //   Logical Minimum (0)
-  0x25, 0x01,        //   Logical Maximum (1)
-  0x35, 0x00,        //   Physical Minimum (0)
-  0x46, 0x3B, 0x01,  //   Physical Maximum (315)    // 0x45, 0x01,        //   Physical Maximum (1)
-  0x75, 0x01,        //   Report Size (1)
-  0x95, 0x0E,        //   Report Count (14)
-  0x05, 0x09,        //   Usage Page (Button)
-  0x19, 0x01,        //   Usage Minimum (0x01)
-  0x29, 0x0E,        //   Usage Maximum (0x0E)
-  0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,    //?
-                     //   Preferred State,No Null Position)
-  0x95, 0x02,        //   Report Count (2)
-  0x81, 0x02,        //   Input (Const,Array,Abs,No Wrap,Linear,    //
-                     //   Preferred State,No Null Position)
-  0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
-  0x25, 0x07,        //   Logical Maximum (7)
-  0x46, 0x3B, 0x01,  //   Physical Maximum (315)
-  0x75, 0x04,        //   Report Size (4)
-  0x95, 0x01,        //   Report Count (1)
-  0x65, 0x14,        //   Unit (System: English Rotation, Length: Centimeter)
-  0x09, 0x39,        //   Usage (Hat switch)
-  0x81, 0x42,        //   Input (Data,Var,Abs,No Wrap,Linear,
-                     //   Preferred State,Null State)
-  0x65, 0x00,        //   Unit (None)
-  0x95, 0x01,        //   Report Count (1)
-  0x81, 0x02,        //   Input (Const,Array,Abs,No Wrap,Linear,    //?
-                     //   Preferred State,No Null Position)
-  0xC0,              // End Collection
+// ========================================================
+// Report Descriptor HID para PS4
+// ========================================================
+
+// El descriptor HID para el mando de PS4
+static uint8_t PS4ReportDescriptor[] = {
+    // Descriptor de ejemplo para el mando de PS4
+    0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x05,        // Usage (Game Pad)
+    0xA1, 0x01,        // Collection (Application)
+
+    // ----------------- Botones ------------------------
+    0x05, 0x09,        // Usage Page (Button)
+    0x19, 0x01,        // Usage Minimum (Button 1)
+    0x29, 0x0E,        // Usage Maximum (Button 14)
+    0x15, 0x00,        // Logical Minimum (0)
+    0x25, 0x01,        // Logical Maximum (1)
+    0x95, 0x0E,        // Report Count (14 buttons)
+    0x75, 0x01,        // Report Size (1 bit)
+    0x81, 0x02,        // Input (Data,Var,Abs)
+
+    0x95, 0x02,        // Report Count (2) - 2 bits de relleno
+    0x75, 0x01,        // Report Size (1 bit)
+    0x81, 0x01,        // Input (Const,Array,Abs)
+
+    // ----------------- D-Pad (Hat Switch) ------------------------
+    0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x39,        // Usage (Hat switch)
+    0x15, 0x00,        // Logical Minimum (0)
+    0x25, 0x07,        // Logical Maximum (7)
+    0x35, 0x00,        // Physical Minimum (0)
+    0x46, 0x3B, 0x01,  // Physical Maximum (315 grados)
+    0x75, 0x04,        // Report Size (4 bits)
+    0x95, 0x01,        // Report Count (1)
+    0x65, 0x14,        // Unit (System: English Rotation, Centimeter)
+    0x81, 0x42,        // Input (Data,Var,Abs,Null State)
+
+    0x75, 0x04,        // Report Size (4 bits) - 4 bits de relleno
+    0x95, 0x01,        // Report Count (1)
+    0x81, 0x01,        // Input (Const,Array,Abs)
+
+    // ----------------- Ejes analógicos ------------------------
+    0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x30,        // Usage (X - Joystick izquierdo eje X)
+    0x09, 0x31,        // Usage (Y - Joystick izquierdo eje Y)
+    0x09, 0x32,        // Usage (Z - Joystick derecho eje X)
+    0x09, 0x35,        // Usage (Rz - Joystick derecho eje Y)
+    0x15, 0x00,        // Logical Minimum (0)
+    0x26, 0xFF, 0x00,  // Logical Maximum (255)
+    0x75, 0x08,        // Report Size (8 bits)
+    0x95, 0x04,        // Report Count (4 ejes)
+    0x81, 0x02,        // Input (Data,Var,Abs)
+
+    0xC0               // End Collection
 };
 
 // Estructura del mensaje (contenido del buffer) tal cual debe enviarse a la PS4,
