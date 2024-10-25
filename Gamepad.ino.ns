@@ -42,6 +42,11 @@ void setup() {
   NSGamepadReleaseAllButtons(&nsGamepad);
 
   esp32USB.begin();
+
+  //calibrate the threshold values for all buttons
+  Serial.println("calibrating");
+  calibrateThresholdValues();
+
 }
 
 void loop() {
@@ -85,82 +90,82 @@ void loop() {
   //check if any button is pressed
   //imprimir valor del pin A
   Serial.println(touchRead(BUTTON_ZR));
-  if (touchRead(BUTTON_A) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_A) > thresholdValues[BUTTON_A]) {
     NSGamepadPressButton(A, &nsGamepad);
     //mostrarMensaje("Boton A presionado");
     Serial.println("Boton A presionado");
   } else {
     NSGamepadReleaseButton(A, &nsGamepad);
   }
-  if (touchRead(BUTTON_B) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_B) > thresholdValues[BUTTON_B]) {
     NSGamepadPressButton(B, &nsGamepad);
   } else {
     NSGamepadReleaseButton(B, &nsGamepad);
   }
-  if (touchRead(BUTTON_X) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_X) >  thresholdValues[BUTTON_X]) {
     NSGamepadPressButton(X, &nsGamepad);
   } else {
     NSGamepadReleaseButton(X, &nsGamepad);
   }
-  if (touchRead(BUTTON_Y) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_Y) > thresholdValues[BUTTON_Y]) {
     NSGamepadPressButton(Y, &nsGamepad);
   } else {
     NSGamepadReleaseButton(Y, &nsGamepad);
   }
-  if (touchRead(BUTTON_L) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_L) > thresholdValues[BUTTON_L]) {
     Serial.println("Boton L presionado");
     NSGamepadPressButton(L, &nsGamepad);
   } else {
     NSGamepadReleaseButton(L, &nsGamepad);
   }
-  if (touchRead(BUTTON_R) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_R) > thresholdValues[BUTTON_R]) {
 
     Serial.println("Boton R presionado");
     NSGamepadPressButton(R, &nsGamepad);
   } else {
     NSGamepadReleaseButton(R, &nsGamepad);
   }
-  if (touchRead(BUTTON_ZL) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_ZL) > thresholdValues[BUTTON_ZL]) {
     Serial.println("Boton ZL presionado");
     NSGamepadPressButton(ZL, &nsGamepad);
   } else {
     NSGamepadReleaseButton(ZL, &nsGamepad);
   }
-  if (touchRead(BUTTON_ZR) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_ZR) > thresholdValues[BUTTON_ZR]) {
     Serial.println("Boton ZR presionado");
     NSGamepadPressButton(ZR, &nsGamepad);
   } else {
     NSGamepadReleaseButton(ZR, &nsGamepad);
   }
-  if (touchRead(BUTTON_HOME) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_HOME) > thresholdValues[BUTTON_HOME]) {
     NSGamepadPressButton(HOME, &nsGamepad);
   } else {
     NSGamepadReleaseButton(HOME, &nsGamepad);
   }
-  if (touchRead(BUTTON_CAPTURE) > TOUCH_THRESHOLD) {
+  if (touchRead(BUTTON_CAPTURE) > thresholdValues[BUTTON_CAPTURE]) {
     NSGamepadPressButton(CAPTURE, &nsGamepad);
   } else {
     NSGamepadReleaseButton(CAPTURE, &nsGamepad);
   }
-  if (touchRead(DPAD_UP) > TOUCH_THRESHOLD) {
+  if (touchRead(DPAD_UP) > thresholdValues[DPAD_UP]) {
     Serial.println("Boton DPAD-U presionado");
     NSGamepadPressButton(UP, &nsGamepad);
   } else {
     NSGamepadReleaseButton(UP, &nsGamepad);
   }
-  if (touchRead(DPAD_DOWN) > TOUCH_THRESHOLD) {
+  if (touchRead(DPAD_DOWN) > thresholdValues[DPAD_DOWN]) {
     Serial.println("Boton DPAD-D presionado");
     NSGamepadPressButton(DOWN, &nsGamepad);
   } else {
     NSGamepadReleaseButton(DOWN, &nsGamepad);
   }
-  if (touchRead(DPAD_LEFT) > TOUCH_THRESHOLD) {
+  if (touchRead(DPAD_LEFT) > thresholdValues[DPAD_LEFT]) {
     Serial.println("Boton DPAD-L presionado");
     NSGamepadPressButton(LEFT, &nsGamepad);
   } else {
     NSGamepadReleaseButton(LEFT, &nsGamepad);
   }
-  if (touchRead(DPAD_RIGHT) > TOUCH_THRESHOLD) {
+  if (touchRead(DPAD_RIGHT) > thresholdValues[DPAD_RIGHT]) {
     Serial.println("Boton DPAD-R presionado");
     NSGamepadPressButton(RIGHT, &nsGamepad);
   } else {
@@ -175,6 +180,40 @@ void loop() {
 
   //añadir un delay para que no se envíen los datos tan rápido
   delay(100);
+
+}
+
+void calibrateThresholdValues() {
+  //calibrate the threshold values for all buttons
+
+  Serial.println("calibrating threshold values for all buttons");
+  int values[BUTTONSNUMBER+1];
+  unsigned long tiempoinicio = millis();
+  int counter = 0;
+
+  // Inicializar valores
+  for(int i = 0; i <= BUTTONSNUMBER; i++){
+    values[i] = 0;
+  }
+
+  //obtener valores
+  while(millis() - tiempoinicio < calibrationTime){
+    for(int i = 1; i <= BUTTONSNUMBER; i++){
+      values[i] += touchRead(i);
+    }
+    counter ++;
+  }
+
+  //calcular promedio
+  for(int i = 1; i <= BUTTONSNUMBER; i++){
+    thresholdValues[i] = (values[i] / counter)*TOUCHED_THRESHOLD_FACTOR;
+
+    //imprimir valor
+    Serial.print("Threshold Boton ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(thresholdValues[i]);
+  }
 
 }
 
