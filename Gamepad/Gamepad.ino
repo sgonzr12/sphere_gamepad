@@ -89,28 +89,28 @@ void loop() {
   //imprimir valor del pin A
   Serial.println(touchRead(1));
   if (touchRead(BUTTON_B) > thresholdValues[BUTTON_B]) {
-    PS4GamepadPressButton(B, &psGamepad);
+    PS4GamepadPressButton(X, &psGamepad);
     Serial.println("Boton B presionado");
   } else {
-    PS4GamepadReleaseButton(B, &psGamepad);
+    PS4GamepadReleaseButton(X, &psGamepad);
   }
   if (touchRead(BUTTON_A) > thresholdValues[BUTTON_A]) {
-    PS4GamepadPressButton(A, &psGamepad);
+    PS4GamepadPressButton(CIRCLE, &psGamepad);
     Serial.println("Boton A presionado");
   } else {
-    PS4GamepadReleaseButton(A, &psGamepad);
+    PS4GamepadReleaseButton(CIRCLE, &psGamepad);
   }
   if (touchRead(BUTTON_Y) > thresholdValues[BUTTON_Y]) {
-    PS4GamepadPressButton(Y, &psGamepad);
+    PS4GamepadPressButton( SQUARE, &psGamepad);
     Serial.println("Boton Y presionado");
   } else {
-    PS4GamepadReleaseButton(Y, &psGamepad);
+    PS4GamepadReleaseButton(SQUARE, &psGamepad);
   }
   if (touchRead(BUTTON_X) > thresholdValues[BUTTON_X]) {
-    PS4GamepadPressButton(X, &psGamepad);
+    PS4GamepadPressButton(TRIANGLE, &psGamepad);
     Serial.println("Boton X presionado");
   } else {
-    PS4GamepadReleaseButton(X, &psGamepad);
+    PS4GamepadReleaseButton(TRIANGLE, &psGamepad);
   }
   if (touchRead(BUTTON_L) > thresholdValues[BUTTON_L]) {
     Serial.println("Boton L1 presionado");

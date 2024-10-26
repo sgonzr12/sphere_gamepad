@@ -2,12 +2,12 @@
 
 #if CONFIG_TINYUSB_HID_ENABLED
 
-#include "NSTypes.h"
+#include "PS4Types.h"
 #include "ESP32USB.h"
 
 // Aqui indicamos el report descriptor especifico para el anfitrion destino (en nuestro caso, la Nintendo Switch)
-static uint8_t* reportDescriptor = NSReportDescriptor;
-size_t reportDescriptorSize = sizeof(NSReportDescriptor);
+static uint8_t* reportDescriptor = PS4ReportDescriptor;
+size_t reportDescriptorSize = sizeof(PS4ReportDescriptor);
 
 // De aqui en adelante, en principio, no habria que tocar nada
 
